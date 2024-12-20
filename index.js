@@ -9,7 +9,11 @@ const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors({
-    origin: ['http://localhost:5174'],
+    origin: [
+        'http://localhost:5174',
+        'https://job-hunter-9f79e.web.app',
+        'https://job-hunter-9f79e.firebaseapp.com'
+    ],
     credentials: true
 
 }));
@@ -46,14 +50,17 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         // jobs related apis
         // const JobCullection = client.db('jobPortal').collection('jobs');
         // const JobApplicationCollection = client.db('jobPortal').collection('job_applications');
+
+
+
         const JobCullection = client.db('jobs-portal').collection('jobs')
         const JobApplicationCollection = client.db('jobs-portal').collection('job-applications')
 
@@ -65,12 +72,20 @@ async function run() {
             const user = req.body;
             const Token = jwt.sign(user, process.env.ACCESS_TOKEN_SECURE, { expiresIn: '5h' })
             res
-                .cookie('token', Token, { httpOnly: true, secure: false })
+                .cookie('token', Token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+                })
                 .send({ success: true })
         })
 
         app.post('/logout', (req, res) => {
-            res.clearCookie('token', { httpOnly: true, secure: false })
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+            })
                 .send({ success: true })
         })
 
