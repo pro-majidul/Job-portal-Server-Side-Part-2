@@ -94,6 +94,8 @@ async function run() {
         app.get('/jobs', async (req, res) => {
             const email = req.query.email;
             const sort = req.query?.sort;
+            const search = req.query?.search;
+
             let query = {};
             let sortQuery = {}
             if (email) {
@@ -101,6 +103,11 @@ async function run() {
             }
             if (sort === "true") {
                 sortQuery = { "salaryRange.min": -1 }
+            }
+            if (search) {
+                query.location = {
+                    $regex: search, $options: 'i'
+                }
             }
             const cursor = JobCullection.find(query).sort(sortQuery);
             const result = await cursor.toArray();
