@@ -11,6 +11,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors({
     origin: [
         'http://localhost:5174',
+        'http://localhost:5173',
         'https://job-hunter-9f79e.web.app',
         'https://job-hunter-9f79e.firebaseapp.com'
     ],
@@ -181,6 +182,20 @@ async function run() {
             res.send(result);
         });
 
+        app.delete('/job-application/:id', Varification, async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const email = req.query.email;
+            const userEmail = req.user.email;
+            if (userEmail != email) {
+                return res.status(403).send({ message: 'Unauthorize access' })
+            }
+            const query = {
+               _id : new ObjectId(id)
+            }
+            const result = await JobApplicationCollection.deleteOne(query);
+            res.send(result)
+        })
 
         app.patch('/job-applications/:id', async (req, res) => {
             const id = req.params.id;
