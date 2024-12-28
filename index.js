@@ -93,11 +93,16 @@ async function run() {
         // jobs related APIs
         app.get('/jobs', async (req, res) => {
             const email = req.query.email;
+            const sort = req.query?.sort;
             let query = {};
+            let sortQuery = {}
             if (email) {
                 query = { hr_email: email }
             }
-            const cursor = JobCullection.find(query);
+            if (sort === "true") {
+                sortQuery = { "salaryRange.min": -1 }
+            }
+            const cursor = JobCullection.find(query).sort(sortQuery);
             const result = await cursor.toArray();
             res.send(result);
         });
@@ -147,6 +152,7 @@ async function run() {
 
         app.get('/job-applications/jobs/:job_id', async (req, res) => {
             const jobId = req.params.job_id;
+            console.log(jobId);
             const query = { job_id: jobId }
             const result = await JobApplicationCollection.find(query).toArray();
             res.send(result);
@@ -190,9 +196,21 @@ async function run() {
             if (userEmail != email) {
                 return res.status(403).send({ message: 'Unauthorize access' })
             }
+
+            // delete the application count in jobs
             const query = {
-               _id : new ObjectId(id)
+                _id: new ObjectId(req.query.jobId)
             }
+
+            const updatedDoc = {
+                $inc: {
+                    applicationCount: -1
+                }
+            }
+
+            const updateResult = await JobCullection.updateOne(query, updatedDoc);
+
+
             const result = await JobApplicationCollection.deleteOne(query);
             res.send(result)
         })
