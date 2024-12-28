@@ -95,6 +95,8 @@ async function run() {
             const email = req.query.email;
             const sort = req.query?.sort;
             const search = req.query?.search;
+            const minPrize = req.query.minPrize;
+            const maxPrize = req.query.maxPrize
 
             let query = {};
             let sortQuery = {}
@@ -102,11 +104,18 @@ async function run() {
                 query = { hr_email: email }
             }
             if (sort === "true") {
-                sortQuery = { "salaryRange.min": -1 }
+                sortQuery = { "salaryRange.min": 1 }
             }
             if (search) {
                 query.location = {
                     $regex: search, $options: 'i'
+                }
+            }
+            if (minPrize && maxPrize) {
+                query = {
+                    ...query,
+                    "salaryRange.min": { $gte: parseInt(minPrize )},
+                    "salaryRange.max": { $lte: parseInt(maxPrize) }
                 }
             }
             const cursor = JobCullection.find(query).sort(sortQuery);
